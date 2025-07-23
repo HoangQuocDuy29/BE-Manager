@@ -1,33 +1,25 @@
-import { Task } from '../entities/Task';
 import { TaskRepository } from '../repositories/task.repository';
 
 export class TaskService {
-  constructor(private readonly taskRepo: TaskRepository) {}
+  constructor(private readonly repo: TaskRepository) {}
 
-  async getAllTasks() {
-    return await this.taskRepo.findAll();
+  getAll(filters: any) {
+    return this.repo.findAll(filters);
   }
 
-  async getTask(id: number) {
-    return await this.taskRepo.findOne({ id });
+  getOne(id: number) {
+    return this.repo.findOne(id);
   }
 
-  async createTask(data: Partial<Task>) {
-    const task = this.taskRepo.create(data);
-    await this.taskRepo.persistAndFlush(task);
-    return task;
+  create(data: any) {
+    return this.repo.create(data);
   }
 
-  async updateTask(id: number, data: Partial<Task>) {
-    const task = await this.taskRepo.findOneOrFail({ id });
-    Object.assign(task, data);
-    await this.taskRepo.flush();
-    return task;
+  update(id: number, data: any) {
+    return this.repo.update(id, data);
   }
 
-  async deleteTask(id: number) {
-    const task = await this.taskRepo.findOneOrFail({ id });
-    await this.taskRepo.removeAndFlush(task);
-    return task;
+  delete(id: number) {
+    return this.repo.delete(id);
   }
 }
