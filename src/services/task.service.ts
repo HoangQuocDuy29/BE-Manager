@@ -22,4 +22,8 @@ export class TaskService {
   delete(id: number) {
     return this.repo.delete(id);
   }
+  searchTasks(keyword: string) {
+  return this.repo.search(keyword); // repo.search là nơi xử lý thực tế
+}
+
 }

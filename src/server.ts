@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import cors from 'cors';
 dotenv.config();
 
 import express from 'express';
@@ -8,7 +9,10 @@ import { createTaskRouter } from './routes/task.route';
 import { SqlEntityManager } from '@mikro-orm/postgresql';
 
 const app = express();
+app.use(cors()); 
 app.use(express.json());
+
+
 
 // Optional: Route kiểm tra root
 app.get('/', (req, res) => {

@@ -9,7 +9,6 @@ export class TaskRepository {
     const where: any = {};
 
     if (filters.assignee) {
-      // Tìm gần đúng không phân biệt hoa thường
       where.assignee = { $ilike: `%${filters.assignee}%` };
     }
 
@@ -49,4 +48,27 @@ export class TaskRepository {
 
     await this.em.removeAndFlush(task);
   }
+
+  async search(keyword: string): Promise<Task[]> {
+  const trimmed = keyword.trim();
+
+  // Nếu rỗng thì trả về toàn bộ
+  if (!trimmed) {
+    return this.findAll({});
+  }
+
+  const conditions: any[] = [];
+
+  const parsedId = parseInt(trimmed, 10);
+  if (!isNaN(parsedId)) {
+    conditions.push({ id: parsedId });
+  }
+
+  conditions.push({ assignee: { $ilike: `%${trimmed}%` } });
+
+  return this.em.find(Task, {
+    $or: conditions,
+  });
+}
+
 }
