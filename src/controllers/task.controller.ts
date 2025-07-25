@@ -8,12 +8,10 @@ export class TaskController {
   getAll = async (req: Request, res: Response) => {
     try {
       const { assignee, priority, deadline } = req.query;
-
       const filters: any = {};
       if (assignee) filters.assignee = assignee;
       if (priority) filters.priority = priority;
 
-      // Validate deadline format (optional)
       if (deadline && !isNaN(Date.parse(deadline as string))) {
         filters.deadline = new Date(deadline as string);
       }
@@ -38,12 +36,8 @@ export class TaskController {
   };
 
   create = async (req: Request, res: Response) => {
-    console.log("📥 Received from FE:", req.body);
-
     const result = taskSchema.safeParse(req.body);
-
     if (!result.success) {
-      console.error("❌ Zod validation error:", result.error.issues);
       return res.status(400).json({
         message: "Invalid input",
         errors: result.error.issues,
@@ -60,15 +54,19 @@ export class TaskController {
   };
 
   search = async (req: Request, res: Response) => {
-    try {
-      const keyword = req.query.q?.toString().trim() || "";
-      console.log("🔍 Search keyword:", keyword);
+    const q = (req.query.q as string)?.trim();
+    console.log("🔍 Search keyword from FE:", q); // ✅ log để kiểm tra giá trị FE gửi lên
 
-      const result = await this.service.searchTasks(keyword);
-      res.json(result);
+    if (!q || q.length === 0) {
+      return res.status(400).json({ message: 'Missing or empty query param "q"' });
+    }
+
+    try {
+      const result = await this.service.searchTasks(q);
+      return res.json(result);
     } catch (error) {
-      console.error("❌ Error in search:", error);
-      res.status(500).json({ message: "Internal server error" });
+      console.error('❌ Search error:', error);
+      return res.status(500).json({ message: 'Internal Server Error' });
     }
   };
 

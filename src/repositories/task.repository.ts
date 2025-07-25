@@ -49,26 +49,24 @@ export class TaskRepository {
     await this.em.removeAndFlush(task);
   }
 
-  async search(keyword: string): Promise<Task[]> {
+async search(keyword: string): Promise<Task[]> {
   const trimmed = keyword.trim();
 
-  // Nếu rỗng thì trả về toàn bộ
   if (!trimmed) {
-    return this.findAll({});
+    return [];
   }
 
-  const conditions: any[] = [];
-
+  // Nếu là số, chỉ tìm theo ID
   const parsedId = parseInt(trimmed, 10);
-  if (!isNaN(parsedId)) {
-    conditions.push({ id: parsedId });
+  if (!isNaN(parsedId) && String(parsedId) === trimmed) {
+    return this.em.find(Task, { id: parsedId });
   }
 
-  conditions.push({ assignee: { $ilike: `%${trimmed}%` } });
-
+  // Nếu không phải số, tìm theo assignee
   return this.em.find(Task, {
-    $or: conditions,
+    assignee: { $ilike: `%${trimmed}%` }
   });
 }
+
 
 }
