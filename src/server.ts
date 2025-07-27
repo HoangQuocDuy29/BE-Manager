@@ -3,16 +3,19 @@ import cors from 'cors';
 dotenv.config();
 
 import express from 'express';
+import passport from 'passport';
 import { MikroORM } from '@mikro-orm/core';
 import mikroConfig from './config/mikro-orm.config';
 import { createTaskRouter } from './routes/task.route';
+import { authRouter } from './routes/auth.route';
+import { configurePassport } from './config/passport-config';
 import { SqlEntityManager } from '@mikro-orm/postgresql';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Optional: Route kiểm tra root
+// Test route
 app.get('/', (req, res) => {
   res.send('🎯 Task API is running!');
 });
@@ -23,8 +26,14 @@ async function startServer() {
     console.log('✅ Connected to PostgreSQL');
 
     const em = orm.em.fork() as SqlEntityManager;
-    const taskRouter = await createTaskRouter(em);
 
+    // 👉 Passport + Auth routes
+    configurePassport(passport, em);
+    app.use(passport.initialize());
+    app.use('/api/auth', authRouter(em)); // ✅ FIXED
+
+    // Task routes
+    const taskRouter = await createTaskRouter(em);
     app.use('/api/tasks', taskRouter);
 
     app.listen(3000, () => {
@@ -36,13 +45,13 @@ async function startServer() {
   }
 }
 
-// ✅ MIDDLEWARE 404 - xử lý mọi route còn lại (nằm ngoài startServer!)
-app.use((req, res) => {
-  console.warn(`⚠️ 404 Not Found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    message: "Route not found",
-    path: req.originalUrl,
-  });
-});
+// 404 middleware
+// app.use((req, res) => {
+//   console.warn(`⚠️ 404 Not Found: ${req.method} ${req.originalUrl}`);
+//   res.status(404).json({
+//     message: "Route not found",
+//     path: req.originalUrl,
+//   });
+// });
 
 startServer();
