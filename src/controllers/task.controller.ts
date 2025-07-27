@@ -24,16 +24,22 @@ export class TaskController {
     }
   };
 
-  getOne = async (req: Request, res: Response) => {
-    try {
-      const task = await this.service.getOne(+req.params.id);
-      if (!task) return res.status(404).json({ message: 'Task not found' });
-      res.json(task);
-    } catch (err) {
-      console.error("❌ Error in getOne:", err);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  };
+getOne = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
+  }
+
+  try {
+    const task = await this.service.getOne(id);
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+    res.json(task);
+  } catch (err) {
+    console.error("❌ Error in getOne:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
   create = async (req: Request, res: Response) => {
     const result = taskSchema.safeParse(req.body);
@@ -70,28 +76,41 @@ export class TaskController {
     }
   };
 
-  update = async (req: Request, res: Response) => {
-    const result = taskSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json(result.error);
-    }
+update = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
 
-    try {
-      const task = await this.service.update(+req.params.id, result.data);
-      res.json(task);
-    } catch (err) {
-      console.error("❌ Error updating task:", err);
-      res.status(404).json({ message: 'Task not found' });
-    }
-  };
+  if (isNaN(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
+  }
 
-  delete = async (req: Request, res: Response) => {
-    try {
-      await this.service.delete(+req.params.id);
-      res.status(204).send();
-    } catch (err) {
-      console.error("❌ Error deleting task:", err);
-      res.status(404).json({ message: 'Task not found' });
-    }
-  };
+  const result = taskSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json(result.error);
+  }
+
+  try {
+    const task = await this.service.update(id, result.data);
+    res.json(task);
+  } catch (err) {
+    console.error("❌ Error updating task:", err);
+    res.status(404).json({ message: 'Task not found' });
+  }
+};
+
+
+delete = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: 'Invalid task ID' });
+  }
+
+  try {
+    await this.service.delete(id);
+    res.status(204).send();
+  } catch (err) {
+    console.error("❌ Error deleting task:", err);
+    res.status(404).json({ message: 'Task not found' });
+  }
+};
 }

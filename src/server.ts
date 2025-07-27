@@ -9,10 +9,8 @@ import { createTaskRouter } from './routes/task.route';
 import { SqlEntityManager } from '@mikro-orm/postgresql';
 
 const app = express();
-app.use(cors()); 
+app.use(cors());
 app.use(express.json());
-
-
 
 // Optional: Route kiểm tra root
 app.get('/', (req, res) => {
@@ -25,8 +23,8 @@ async function startServer() {
     console.log('✅ Connected to PostgreSQL');
 
     const em = orm.em.fork() as SqlEntityManager;
-
     const taskRouter = await createTaskRouter(em);
+
     app.use('/api/tasks', taskRouter);
 
     app.listen(3000, () => {
@@ -37,5 +35,14 @@ async function startServer() {
     process.exit(1);
   }
 }
+
+// ✅ MIDDLEWARE 404 - xử lý mọi route còn lại (nằm ngoài startServer!)
+app.use((req, res) => {
+  console.warn(`⚠️ 404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({
+    message: "Route not found",
+    path: req.originalUrl,
+  });
+});
 
 startServer();
