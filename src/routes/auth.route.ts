@@ -22,7 +22,12 @@ export const authRouter = (em: EntityManager) => {
 
   // ✅ Lấy thông tin user đang đăng nhập
   router.get('/me', isAuthenticated, (req, res) => {
-    res.json({ user: req.user });
+    // Trả về thông tin người dùng bao gồm role dưới dạng chuỗi (admin hoặc user)
+    res.json({ user: { 
+      id: req.user?.id, 
+      email: req.user?.email, 
+      role: req.user?.role.name,  // Trả về role dưới dạng chuỗi (admin, user)
+    } });
   });
 
   return router;
