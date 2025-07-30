@@ -1,14 +1,14 @@
 import { PassportStatic } from 'passport';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { User } from '../entities/User';
-import { EntityManager } from '@mikro-orm/core';
+import { SqlEntityManager } from '@mikro-orm/postgresql'; // ← Thay đổi import
 
 interface JwtPayload {
   id: number;
   // Mở rộng nếu cần thêm: email?: string; role?: string;
 }
 
-export function configurePassport(passport: PassportStatic, em: EntityManager) {
+export function configurePassport(passport: PassportStatic, em: SqlEntityManager) {
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
     throw new Error('❌ JWT_SECRET is not defined in environment variables');

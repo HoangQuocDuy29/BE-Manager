@@ -1,11 +1,11 @@
-// 📁 BE: src/controllers/auth.controller.ts
+// File: src/controllers/auth.controller.ts (FIXED)
 import { Request, Response } from 'express';
 import { registerUser, loginUser } from '../services/auth.service';
 import { registerValidator, loginValidator } from '../validators/auth.validator';
-import { EntityManager } from '@mikro-orm/core';
+import { SqlEntityManager } from '@mikro-orm/postgresql'; // ← Thay đổi import
 
 // Controller đăng ký người dùng
-export const registerController = (em: EntityManager) => async (req: Request, res: Response) => {
+export const registerController = (em: SqlEntityManager) => async (req: Request, res: Response) => {
   try {
     // Kiểm tra dữ liệu đăng ký từ request body
     const data = registerValidator.parse(req.body);
@@ -34,7 +34,7 @@ export const registerController = (em: EntityManager) => async (req: Request, re
 };
 
 // Controller đăng nhập người dùng
-export const loginController = (em: EntityManager) => async (req: Request, res: Response) => {
+export const loginController = (em: SqlEntityManager) => async (req: Request, res: Response) => {
   try {
     // Kiểm tra dữ liệu đăng nhập từ request body
     const data = loginValidator.parse(req.body);

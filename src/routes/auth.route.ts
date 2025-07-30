@@ -1,6 +1,6 @@
-// 📁 BE: src/routes/auth.route.ts
+// File: src/routes/auth.route.ts (FIXED)
 import { Router } from 'express';
-import { EntityManager } from '@mikro-orm/core';
+import { SqlEntityManager } from '@mikro-orm/postgresql'; // ← Thay đổi import
 import { isAuthenticated } from '../middleware/isAuthenticated';
 import {
   registerController,
@@ -8,7 +8,7 @@ import {
   logoutController,
 } from '../controllers/auth.controller';
 
-export const authRouter = (em: EntityManager) => {
+export const authRouter = (em: SqlEntityManager) => { // ← Thay đổi parameter type
   const router = Router();
 
   // ✅ Đăng ký tài khoản
