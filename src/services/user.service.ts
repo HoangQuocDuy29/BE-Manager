@@ -1,4 +1,4 @@
-// File: src/services/user.service.ts (MỚI)
+// File: src/services/user.service.ts (UPDATED - bỏ hết logging)
 import { UserRepository } from '../repositories/user.repository';
 
 export interface CreateUserDTO {
@@ -30,6 +30,20 @@ export interface UserFilters {
   search?: string;
   page?: number;
   limit?: number;
+}
+
+export interface UserStats {
+  total: number;
+  active: number;
+  inactive: number;
+  suspended: number;
+  newUsers: number;
+  activePercentage: number;
+  byRole: {
+    admin: number;
+    user: number;
+  };
+  byDepartment: { [key: string]: number };
 }
 
 export class UserService {
@@ -71,6 +85,22 @@ export class UserService {
         throw new Error('Invalid role. Must be admin or user');
       }
 
+      // Additional validation
+      if (!data.email || !data.password) {
+        throw new Error('Email and password are required');
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        throw new Error('Invalid email format');
+      }
+
+      // Validate password strength
+      if (data.password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
       const user = await this.repo.create(data);
       
       // Return user without password
@@ -83,11 +113,23 @@ export class UserService {
   // UPDATE user
   async update(id: number, data: UpdateUserDTO) {
     try {
+      // Check if user exists first
+      const existingUser = await this.repo.findOne(id);
+      if (!existingUser) {
+        throw new Error('User not found');
+      }
+
       // Validate email không trùng (nếu update email)
-      if (data.email) {
+      if (data.email && data.email !== existingUser.email) {
         const emailExists = await this.repo.emailExists(data.email, id);
         if (emailExists) {
           throw new Error('Email already exists');
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.email)) {
+          throw new Error('Invalid email format');
         }
       }
 
@@ -99,6 +141,11 @@ export class UserService {
       // Validate status
       if (data.status && !['active', 'inactive', 'suspended'].includes(data.status)) {
         throw new Error('Invalid status. Must be active, inactive, or suspended');
+      }
+
+      // Validate password if updating
+      if (data.password && data.password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
       }
 
       const user = await this.repo.update(id, data);
@@ -113,6 +160,17 @@ export class UserService {
   // DELETE user (soft delete by default)
   async delete(id: number, hardDelete = false) {
     try {
+      // Check if user exists first
+      const existingUser = await this.repo.findOne(id);
+      if (!existingUser) {
+        throw new Error('User not found');
+      }
+
+      // Prevent deleting admin users (safety check)
+      if (existingUser.role?.name === 'admin' && hardDelete) {
+        throw new Error('Cannot permanently delete admin users');
+      }
+
       const result = await this.repo.delete(id, !hardDelete);
       
       if (hardDelete) {
@@ -129,7 +187,7 @@ export class UserService {
   }
 
   // GET user stats for dashboard
-  async getStats() {
+  async getStats(): Promise<UserStats> {
     try {
       return await this.repo.getStats();
     } catch (error) {
@@ -142,6 +200,10 @@ export class UserService {
     try {
       if (!keyword?.trim()) {
         throw new Error('Search keyword is required');
+      }
+
+      if (keyword.trim().length < 2) {
+        throw new Error('Search keyword must be at least 2 characters');
       }
 
       return await this.repo.findAll({
@@ -161,7 +223,12 @@ export class UserService {
     const { password, ...userWithoutPassword } = user;
     return {
       ...userWithoutPassword,
-      role: user.role?.name || user.role // Ensure role is string
+      role: user.role?.name || user.role, // Ensure role is string
+      // Format dates for frontend
+      joinedDate: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : null,
+      lastLoginDate: user.lastLoginAt ? new Date(user.lastLoginAt).toISOString().split('T')[0] : null,
+      // Format spending
+      formattedSpending: user.totalSpending ? `${user.totalSpending.toLocaleString('vi-VN')}₫` : '0₫'
     };
   }
 

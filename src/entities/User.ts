@@ -1,4 +1,4 @@
-// File: src/entities/User.ts (Updated để tương thích với DB hiện tại)
+// File: src/entities/User.ts (Updated với các trường cho UI)
 import { Entity, PrimaryKey, Property, ManyToOne, OneToMany, ManyToMany, Collection } from '@mikro-orm/core';
 import { Role } from './Role';
 import { Task } from './Task';
@@ -52,8 +52,21 @@ export class User {
   @Property({ nullable: true, fieldName: 'last_login_at' })
   lastLoginAt?: Date;
 
+  // ===== CÁC TRƯỜNG MỚI CHO UI BẢNG =====
+  @Property({ default: 0, fieldName: 'total_orders' })
+  totalOrders: number = 0;
+
+  @Property({ 
+    type: 'decimal', 
+    precision: 12, 
+    scale: 2, 
+    default: 0,
+    fieldName: 'total_spending' 
+  })
+  totalSpending: number = 0;
+
   // Relations
-  @ManyToOne(() => Role) // Giữ nguyên relation hiện có
+  @ManyToOne(() => Role)
   role!: Role;
 
   @OneToMany(() => Task, task => task.creator)
@@ -74,7 +87,7 @@ export class User {
   @OneToMany(() => LogWork, logwork => logwork.user)
   logWorks = new Collection<LogWork>(this);
 
-  // Helper methods
+  // ===== HELPER METHODS CŨ =====
   isAdmin(): boolean {
     return this.role.name === 'admin';
   }
@@ -89,5 +102,43 @@ export class User {
 
   getDisplayName(): string {
     return this.fullName || this.username || this.email;
+  }
+
+  // ===== HELPER METHODS MỚI =====
+  getFormattedSpending(): string {
+    return this.totalSpending.toLocaleString('vi-VN') + '₫';
+  }
+
+  getJoinDate(): string {
+    return this.createdAt.toLocaleDateString('vi-VN');
+  }
+
+  getStatusBadgeVariant(): 'default' | 'secondary' | 'destructive' {
+    switch (this.status) {
+      case UserStatus.ACTIVE:
+        return 'default';
+      case UserStatus.INACTIVE:
+        return 'secondary';
+      case UserStatus.SUSPENDED:
+        return 'destructive';
+      default:
+        return 'secondary';
+    }
+  }
+
+  // Method để tính toán statistics (nếu cần)
+  calculateTotalOrders(): number {
+    // Logic tính tổng đơn hàng từ relations khác nếu có
+    return this.totalOrders;
+  }
+
+  calculateTotalSpending(): number {
+    // Logic tính tổng chi tiêu từ relations khác nếu có  
+    return this.totalSpending;
+  }
+
+  // Method cho avatar fallback
+  getAvatarFallback(): string {
+    return this.getDisplayName().charAt(0).toUpperCase();
   }
 }

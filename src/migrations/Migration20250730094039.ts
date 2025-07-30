@@ -19,6 +19,10 @@ export class Migration20250730094039 extends Migration {
     this.addSql('alter table "user" add column if not exists "status" varchar(20) default \'active\';');
     this.addSql('alter table "user" add column if not exists "last_login_at" timestamptz;');
     this.addSql('alter table "user" add column if not exists "updated_at" timestamptz default now();');
+    
+    // ===== THÊM CÁC TRƯỜNG MỚI CHO UI BẢNG =====
+    this.addSql('alter table "user" add column if not exists "total_orders" integer default 0;');
+    this.addSql('alter table "user" add column if not exists "total_spending" decimal(12,2) default 0;');
 
     // 2. Thêm cột mới cho Task (nullable để không ảnh hưởng data cũ)
     this.addSql('alter table "task" add column if not exists "status" varchar(20) default \'pending\';');
@@ -207,6 +211,10 @@ export class Migration20250730094039 extends Migration {
     this.addSql('create index if not exists "task_deadline_index" on "task" ("deadline");');
     this.addSql('create index if not exists "ticket_status_index" on "ticket" ("status");');
     this.addSql('create index if not exists "log_work_date_index" on "log_work" ("date");');
+    
+    // ===== THÊM INDEXES CHO CÁC TRƯỜNG MỚI =====
+    this.addSql('create index if not exists "user_total_orders_index" on "user" ("total_orders");');
+    this.addSql('create index if not exists "user_total_spending_index" on "user" ("total_spending");');
 
     console.log('✅ Phase 4 completed: Indexes created');
 
@@ -246,12 +254,25 @@ export class Migration20250730094039 extends Migration {
       WHERE creator_id IS NULL;
     `);
 
+    // ===== KHỞI TẠO DỮ LIỆU MẶC ĐỊNH CHO CÁC TRƯỜNG MỚI =====
+    console.log('📊 Initializing default values for new fields...');
+    
+    // Cập nhật giá trị mặc định cho users hiện có
+    this.addSql(`
+      UPDATE "user" 
+      SET 
+        total_orders = FLOOR(RANDOM() * 50 + 1),
+        total_spending = FLOOR(RANDOM() * 10000000 + 100000)
+      WHERE total_orders = 0 OR total_spending = 0;
+    `);
+
     console.log('✅ Phase 5 completed: Data migration finished');
 
     console.log('🎉 Migration completed successfully! Your existing data is preserved.');
 
     // Thông báo về việc xóa cột assignee cũ (không tự động xóa)
     console.log('⚠️  NOTE: Column "assignee" in task table is kept for backup. You can manually drop it later if needed.');
+    console.log('💡 INFO: Added total_orders and total_spending fields with random demo data for existing users.');
   }
 
   async down(): Promise<void> {
@@ -284,6 +305,10 @@ export class Migration20250730094039 extends Migration {
     this.addSql('alter table "user" drop column if exists "status";');
     this.addSql('alter table "user" drop column if exists "last_login_at";');
     this.addSql('alter table "user" drop column if exists "updated_at";');
+    
+    // ===== ROLLBACK CÁC TRƯỜNG MỚI =====
+    this.addSql('alter table "user" drop column if exists "total_orders";');
+    this.addSql('alter table "user" drop column if exists "total_spending";');
 
     console.log('✅ Rollback completed');
   }

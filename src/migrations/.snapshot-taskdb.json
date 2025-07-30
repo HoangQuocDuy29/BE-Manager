@@ -186,6 +186,28 @@
           "length": 6,
           "mappedType": "datetime"
         },
+        "total_orders": {
+          "name": "total_orders",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "default": "0",
+          "mappedType": "integer"
+        },
+        "total_spending": {
+          "name": "total_spending",
+          "type": "numeric(12,2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "precision": 12,
+          "scale": 2,
+          "default": "0",
+          "mappedType": "decimal"
+        },
         "role_id": {
           "name": "role_id",
           "type": "int",

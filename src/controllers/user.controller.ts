@@ -1,4 +1,4 @@
-// File: src/controllers/user.controller.ts (MỚI)
+// File: src/controllers/user.controller.ts (UPDATED - chỉ log API endpoints)
 import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { 
@@ -10,7 +10,17 @@ import {
 } from '../validators/user.validator';
 
 export class UserController {
-  constructor(private readonly service: UserService) {}
+  constructor(private readonly service: UserService) {
+    // Log available User API endpoints một lần khi khởi tạo
+    console.log('\n📋 User API endpoints:');
+    console.log('  - GET    /api/users (list users with pagination & filters)');
+    console.log('  - GET    /api/users/stats (user statistics)');
+    console.log('  - GET    /api/users/search (search users)');
+    console.log('  - GET    /api/users/:id (get user by ID)');
+    console.log('  - POST   /api/users (create new user)');
+    console.log('  - PUT    /api/users/:id (update user)');
+    console.log('  - DELETE /api/users/:id (delete user)');
+  }
 
   // GET /api/users - Lấy danh sách users với filters
   getAll = async (req: Request, res: Response) => {
@@ -19,6 +29,7 @@ export class UserController {
       const filtersResult = userFiltersSchema.safeParse(req.query);
       if (!filtersResult.success) {
         return res.status(400).json({
+          success: false,
           message: 'Invalid query parameters',
           errors: filtersResult.error.issues
         });
@@ -33,7 +44,6 @@ export class UserController {
         message: `Found ${result.pagination.total} users`
       });
     } catch (error) {
-      console.error('❌ Error in UserController.getAll:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error',
@@ -49,6 +59,7 @@ export class UserController {
       const paramsResult = userIdSchema.safeParse(req.params);
       if (!paramsResult.success) {
         return res.status(400).json({
+          success: false,
           message: 'Invalid user ID',
           errors: paramsResult.error.issues
         });
@@ -62,8 +73,6 @@ export class UserController {
         message: 'User retrieved successfully'
       });
     } catch (error) {
-      console.error('❌ Error in UserController.getOne:', error);
-      
       if (error instanceof Error && error.message.includes('not found')) {
         return res.status(404).json({
           success: false,
@@ -86,6 +95,7 @@ export class UserController {
       const bodyResult = createUserSchema.safeParse(req.body);
       if (!bodyResult.success) {
         return res.status(400).json({
+          success: false,
           message: 'Invalid input data',
           errors: bodyResult.error.issues
         });
@@ -99,8 +109,6 @@ export class UserController {
         message: 'User created successfully'
       });
     } catch (error) {
-      console.error('❌ Error in UserController.create:', error);
-      
       if (error instanceof Error && error.message.includes('already exists')) {
         return res.status(409).json({
           success: false,
@@ -123,6 +131,7 @@ export class UserController {
       const paramsResult = userIdSchema.safeParse(req.params);
       if (!paramsResult.success) {
         return res.status(400).json({
+          success: false,
           message: 'Invalid user ID',
           errors: paramsResult.error.issues
         });
@@ -132,6 +141,7 @@ export class UserController {
       const bodyResult = updateUserSchema.safeParse(req.body);
       if (!bodyResult.success) {
         return res.status(400).json({
+          success: false,
           message: 'Invalid input data',
           errors: bodyResult.error.issues
         });
@@ -145,8 +155,6 @@ export class UserController {
         message: 'User updated successfully'
       });
     } catch (error) {
-      console.error('❌ Error in UserController.update:', error);
-      
       if (error instanceof Error && error.message.includes('not found')) {
         return res.status(404).json({
           success: false,
@@ -176,6 +184,7 @@ export class UserController {
       const paramsResult = userIdSchema.safeParse(req.params);
       if (!paramsResult.success) {
         return res.status(400).json({
+          success: false,
           message: 'Invalid user ID',
           errors: paramsResult.error.issues
         });
@@ -192,8 +201,6 @@ export class UserController {
         message: hardDelete ? 'User permanently deleted' : 'User deactivated successfully'
       });
     } catch (error) {
-      console.error('❌ Error in UserController.delete:', error);
-      
       if (error instanceof Error && error.message.includes('not found')) {
         return res.status(404).json({
           success: false,
@@ -216,6 +223,7 @@ export class UserController {
       const queryResult = searchQuerySchema.safeParse(req.query);
       if (!queryResult.success) {
         return res.status(400).json({
+          success: false,
           message: 'Invalid search parameters',
           errors: queryResult.error.issues
         });
@@ -231,7 +239,6 @@ export class UserController {
         message: `Found ${result.pagination.total} users matching "${q}"`
       });
     } catch (error) {
-      console.error('❌ Error in UserController.search:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error',
@@ -251,7 +258,6 @@ export class UserController {
         message: 'User statistics retrieved successfully'
       });
     } catch (error) {
-      console.error('❌ Error in UserController.getStats:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error',
